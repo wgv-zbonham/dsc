@@ -4,7 +4,7 @@ Configuration DashboardAppRole
 {
 	param($deployContext)
 	
-	 Import-DscResource -Module PSDesiredStateConfiguration, xWebAdministration, xWebDeploy
+	 Import-DscResource -Module PSDesiredStateConfiguration, xWebAdministration
 	
 	Node localhost
 	{		
