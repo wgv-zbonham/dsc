@@ -4,7 +4,8 @@ Configuration DashboardAppRole
 {
 	param($deployContext)
 	
-	 Import-DscResource -Module PSDesiredStateConfiguration, xWebAdministration
+	 Import-DscResource -Module PSDesiredStateConfiguration, xWebAdministration, xComputerManagement
+    
 	
 	Node localhost
 	{		
@@ -103,6 +104,14 @@ Configuration DashboardAppRole
             Ensure = "Present"
         }
         #>
+        
+        xScheduledTask DashboardEtlTask
+        {
+            TaskName = "WatchGuard Video EL Dashboard ETL"
+            ActionExecutable = "{0}\Dashboard.Etl.Exe" -f $deployContext.ApplicationBinFolder
+            ScheduleType = "Minutes"
+            RepeatInterval = 5
+        }
 	}
 }
 

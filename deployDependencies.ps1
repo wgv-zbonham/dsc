@@ -11,5 +11,6 @@ function Install-ModuleIfNeeded ($moduleName) {
 
 Install-ModuleIfNeeded PSDesiredStateConfiguration
 Install-ModuleIfNeeded xWebAdministration
+Install-ModuleIfNeeded xComputerManagement
 
 

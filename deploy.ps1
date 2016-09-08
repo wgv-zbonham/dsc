@@ -36,4 +36,5 @@ Write-Host "DSC configuration starting ..."
 Start-DscConfiguration -path .\DashboardAppRole -wait -force
 Write-Host "DSC configuration complete"
 
+Write-Host ""
 Write-Host "Deployment Complete.  Have a nice day."
