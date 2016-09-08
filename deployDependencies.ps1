@@ -3,6 +3,7 @@
 function Install-ModuleIfNeeded ($moduleName) {
     
     if (-not (Get-Module -Name $moduleName)) {
+    
         Install-Module $moduleName -force
     }
 }

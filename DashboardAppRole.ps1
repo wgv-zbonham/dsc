@@ -40,6 +40,11 @@ Configuration DashboardAppRole
 			DestinationPath = $deployContext.ApplicationWwwFolder            
         }
         
+        Log DashboardEtl 
+        {
+            Message = "Copying Dashboard.Etl to $deployContext.ApplicationBinFolder"
+        
+        }
         File DashboardEtl
         {
             DestinationPath = $deployContext.ApplicationBinFolder

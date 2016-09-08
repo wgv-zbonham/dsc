@@ -1,12 +1,4 @@
 
-create app role
-create web role
-create db role
-create task role
 
-requirements - .NET 4.5.1
-Windows features
+Need to just zip website, not msdeploy
 
-app role
-create .\watchguardvideo folder
-create .\watchguardvideo\apps\dashboard folder
