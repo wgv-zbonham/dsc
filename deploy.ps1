@@ -12,17 +12,31 @@ Requirements
 
 cls
 
+
 Write-Host "$([char]0x00A9) 2016, WatchGuard Video.  All rights reserved."
+Write-Host ""
+Write-Host ""
+Write-Host ""
+Write-Host ""
 Write-Host ""
 Write-Host "Package deployment starting ..."
 
 
-. .\DeployDependencies.ps1
-. .\DeployContext.ps1
-. .\SqlPackager.ps1
+$fi = new-object system.io.fileinfo $myinvocation.mycommand.path
+$lib = [system.io.path]::Combine($fi.DirectoryName, "lib")
 
-# push down 
-Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\PowerShell\1\ShellIds" -Name "ConsolePrompting" -Value $True
+
+Write-Debug ("loading lib from directory:  "  + $lib)
+
+# load all
+foreach( $dir in dir $lib\*.ps1) {
+	write-debug ( "loading lib: " + ($dir.FullName) )
+ 
+	. $dir.FullName 
+}
+
+. .\DeployContext.ps1
+
 
 [xml]$environment = get-content .\localhost.environment
 
@@ -39,10 +53,10 @@ Deploy-WgvAllDatabases -deployContext $dc
 
 exit
 
-.\DashboardAppRole -deployContext $dc | out-null
+.\DashboardConfiguration -deployContext $dc | out-null
 
 Write-Host "DSC configuration starting ..."
-Start-DscConfiguration -path .\DashboardAppRole -wait -force
+Start-DscConfiguration -path .\DashboardConfiguration -wait -force
 Write-Host "DSC configuration complete"
 
 Write-Host ""

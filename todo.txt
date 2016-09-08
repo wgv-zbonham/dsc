@@ -1,4 +1,4 @@
 
 
 Need to just zip website, not msdeploy
-
+Send DSC mof files to temp folder
