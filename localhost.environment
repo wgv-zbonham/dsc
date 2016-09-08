@@ -1,0 +1,47 @@
+
+<environment>
+	    
+    
+	<servers>
+    	<server name="localhost" roles="STS|HOST|IMPORT|JOBQ|WIRELESS|WEB"/>
+	</servers>
+	
+	<roles>
+		<role name="STS">
+			<services>
+				<service name="ADAM_WatchGuardLDS"/>
+				<service name="WatchGuardTokenService"/>
+			</services>
+		</role>
+
+		<role name="HOST">
+			<services>
+				<service name="WatchGuardHostedService"/>
+			</services>
+		</role>
+		
+		<role name="IMPORT">
+			<services>
+				<service name="WatchGuardImportService"/>
+			</services>
+		</role>
+		
+		<role name="WIRELESS">
+			<services>
+				<service name="WatchGuardWirelessImportService"/>
+			</services>
+		</role>
+		
+		<role name="JOBQ">
+			<services>
+				<service name="WatchGuardJobQueueService"/>
+			</services>
+		</role>
+		
+		<role name="WEB">
+			<services>
+				<service name="W3SVC"/>
+			</services>
+		</role>	
+	</roles>
+</environment>
