@@ -9,7 +9,7 @@ A package is simply a directory folder containing the resources, and metadata, t
 ### What is metadata?
 Examples of metadata would be resource type (web, service, file, etc), role, required identies, connection string names, endpoints, etc.  Defined as part of the application development process.
 
-### What is environment.config
+### What is environment.config?
 The environment.config is an information model about the environment: servers, roles, connection strings, identities, etc.  The metadata keys, and default values, will be lifted up from metadata found with each package, and merged with the values found in the environment.config.  The environment.config will contain things normally prompted for during the tradtional installation process.  The goal would be to have a majority of these not change per environment, but when they do, there is a single place to make the change, then execute the deploy.
 
 The environment.config will default to installing all roles on the local machine.  The environment.config will also support defining multiple servers and assinging them roles, and having PANDA provision those machines as well.
