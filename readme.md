@@ -10,7 +10,7 @@ A package is simply a directory folder containing the resources, and metadata, t
 Examples of metadata would be resource type (web, service, file, etc), role, required identies, connection string names, endpoints, etc.  Defined as part of the application development process.
 
 ### environment.config
-The environment.config is an information model about the environment: servers, roles, connection strings, identities, etc.  The metadata keys, and default values, will be lifted up from metadata found with each package, and merged with the values found in the environment.config.  The environment.config will contain things normally prompted for during the tradtional installatin process.  The goal would be to have a majority of these not change per environment, but when they do, there is a single place to make the change, then execute the deploy.
+The environment.config is an information model about the environment: servers, roles, connection strings, identities, etc.  The metadata keys, and default values, will be lifted up from metadata found with each package, and merged with the values found in the environment.config.  The environment.config will contain things normally prompted for during the tradtional installation process.  The goal would be to have a majority of these not change per environment, but when they do, there is a single place to make the change, then execute the deploy.
 
 The environment.config will default to installing all roles on the local machine.  The environment.config will also support defining multiple servers and assinging them roles, and having PANDA provision those machines as well.
 
@@ -34,6 +34,7 @@ Ideally, patches are just complete, but updated, versions of the software.
 
 * Windows Management Framework 5.0 (PowerShell)
 ** PowerShell DSC is only a requirement because we are trying it as a basis for the tooling.  It gives us many community sourced resources that we are not required to write.
+* Some features of the deployment process (multi server) will require pushing to remote servers using WinRM.  This is a feature that is auto-configured on Windows Server 2012R2 but may need to be manually configured for remote machines on previous versions of Windows Server.
 * Running as an Administrator on the server (filesystem, database access)
     
 ## Risks    
