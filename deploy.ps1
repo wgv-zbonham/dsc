@@ -1,4 +1,5 @@
 
+param($environmentPath="localhost.environment")
 
 <#
 Requirements
@@ -12,7 +13,6 @@ Requirements
 
 cls
 
-
 Write-Host "$([char]0x00A9) 2016, WatchGuard Video.  All rights reserved."
 Write-Host ""
 Write-Host ""
@@ -20,6 +20,8 @@ Write-Host ""
 Write-Host ""
 Write-Host ""
 Write-Host "Package deployment starting ..."
+Write-Host "Node Name: $env:computername.$env:userdnsdomain"
+Write-Host "Identity: $(whoami)"
 
 
 $fi = new-object system.io.fileinfo $myinvocation.mycommand.path
@@ -35,29 +37,45 @@ foreach( $dir in dir $lib\*.ps1) {
 	. $dir.FullName 
 }
 
-. .\DeployContext.ps1
+function Deploy($settings) {
 
 
-[xml]$environment = get-content .\localhost.environment
+	. .\DeployContext.ps1
 
-$dc = new-object DeployContext
+	$dc = new-object DeployContext $settings
+		
+	<#
+	$credential = Get-Credential -Username $Env:Userdomain\$Env:Username -m "The credential that will be used to administer WatchGuard Video applications"
+	$dc.DeployCredential = $credential
+	#>
 
-<#
-$credential = Get-Credential -Username $Env:Userdomain\$Env:Username -m "The credential that will be used to administer WatchGuard Video applications"
-$dc.DeployCredential = $credential
-#>
+	Write-Host "Deploying database projects"
 
-Write-Host "Deploying database projects"
+	# Deploy-WgvAllDatabases -deployContext $dc
 
-Deploy-WgvAllDatabases -deployContext $dc
+	.\DashboardConfiguration -deployContext $dc | out-null
 
-exit
+	Write-Host "DSC configuration starting ..."
+	Start-DscConfiguration -path .\DashboardConfiguration -wait -force
+	Write-Host "DSC configuration complete"
 
-.\DashboardConfiguration -deployContext $dc | out-null
 
-Write-Host "DSC configuration starting ..."
-Start-DscConfiguration -path .\DashboardConfiguration -wait -force
-Write-Host "DSC configuration complete"
+}
+
+Write-Host "Loading environment settings from $environmentPath"
+[xml]$xml = Get-Content -path $environmentPath 
+
+$settings = @{}
+foreach($setting in $xml.environment.settings.setting) 
+{	
+	$settings[$setting.name] = $setting.value
+}
+
+
+
+$deployTime = Measure-Command { Deploy $settings }
+
 
 Write-Host ""
-Write-Host "Package deployment omplete.  Have a nice day."
+Write-Host "Package deployment complete in $("{0:hh\:mm\:ss\,fff}" -f $deployTime).   Have a nice day."
+

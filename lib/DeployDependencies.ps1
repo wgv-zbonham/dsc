@@ -1,15 +1,19 @@
 
 
 function Install-ModuleIfNeeded ($moduleName) {
-    
+
+		
     if ((Get-Module -Name $moduleName) -eq $null) {
 
+		Write-Host "Acquiring dependency $moduleName"
         Install-Module $moduleName
     }
 }
 
-Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 
+Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Write-Verbose
+
+Set-PSRepository -Name PSGallery -InstallationPolicy Trusted | Write-Verbose
 
 
 Install-ModuleIfNeeded xWebAdministration

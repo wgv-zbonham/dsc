@@ -1,6 +1,19 @@
 
 <environment>
-	    
+
+	<settings>
+		<setting name="WatchGuardFolder" value="c:\watchguardvideo"/>
+		<setting name="PackagesFolder" value="c:\watchguardvideo\packages"/>
+		
+		<setting name="WGEvidenceLibraryConnection" value="Data Source=.;Initial Catalog=WGEvidenceLibrary_ZB;Integrated Security=True"/>
+		<setting name="LoggingDb" value="Data Source=.;Initial Catalog=WGReport_ZB;Integrated Security=True"/>
+		<setting name="WGReportConnection" value="Data Source=.;Initial Catalog=WGReport_ZB;Integrated Security=True"/>
+	</settings>
+	
+	<certificates>
+		<certificate name="DashboardWeb" thumbprint="" algo="SHA1"/>
+	</certificates>
+		
     
 	<servers>
     	<server name="localhost" roles="STS|HOST|IMPORT|JOBQ|WIRELESS|WEB"/>
@@ -38,10 +51,11 @@
 			</services>
 		</role>
 		
-		<role name="WEB">
+		<role name="WEB|DASHBOARD">
 			<services>
 				<service name="W3SVC"/>
 			</services>
 		</role>	
+		
 	</roles>
 </environment>

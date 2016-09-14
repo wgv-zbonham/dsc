@@ -1,5 +1,6 @@
 param($deployContext)
 
+
 Configuration DashboardConfiguration
 {
 	param($deployContext)
@@ -8,14 +9,7 @@ Configuration DashboardConfiguration
     
 	
 	Node localhost
-	{		
-        <#
-        WindowsFeature WebManagementService
-        {
-            Ensure = "Present"
-            Name = "Web-Mgmt-Service"
-        }
-        #>
+	{	       
 
         File ApplicationFolder
         {
@@ -66,7 +60,7 @@ Configuration DashboardConfiguration
 		}
         
         #todo bindings need to be lifted up
-        xWebsite DashboardWeb
+        xWebsite DashboardWebsite
         {
             Name = $deployContext.FeatureName
             ApplicationPool = "EL-{0}" -f $deployContext.FeatureName
@@ -81,6 +75,7 @@ Configuration DashboardConfiguration
                                    Port                  = 8000                                   
                                 }
                              )
+			
             
         }
         
@@ -91,15 +86,6 @@ Configuration DashboardConfiguration
             Destination = $deployContext.ApplicationWwwFolder
         }
         
-        <#
-        xWebPackageDeploy DashboardWebPackage
-        {
-            SourcePath = "{0}\{1}\Dashboard.Web\Dashboard.Web.zip" -f $deployContext.PackageFolder, $deployContext.PackageVersion
-            Destination = "c:\watchguardvideo\apps\Dashboard\www"
-            Ensure = "Present"
-        }
-        #>
-        
         xScheduledTask DashboardEtlTask
         {
             TaskName = "WatchGuard Video EL Dashboard ETL"
@@ -107,6 +93,108 @@ Configuration DashboardConfiguration
             ScheduleType = "Minutes"
             RepeatInterval = 5
         }
+		
+		# todo, this needs to be its own module 								
+		Script ChangeWGEvidenceLibraryConnectionString
+		{
+			SetScript =
+			{   
+				$path = "$($using:deployContext.ApplicationWwwFolder)\web.config"
+				[xml]$xml = Get-Content $path
+		 
+				$node = $xml.SelectSingleNode("//connectionStrings/add[@name='WGEvidenceLibraryConnection']")
+								
+				$node.Attributes["connectionString"].Value = $using:deployContext.Settings["WGEvidenceLibraryConnection"]
+				$xml.Save($path)
+			}
+			TestScript = 
+			{						    
+				$path = "$($using:deployContext.ApplicationWwwFolder)\web.config"
+				[xml]$xml = Get-Content $path
+		 
+				$node = $xml.SelectSingleNode("//connectionStrings/add[@name='WGEvidenceLibraryConnection']")
+				$cn = $node.Attributes["connectionString"].Value
+				$stateMatched = $cn -eq  $using:deployContext.Settings["WGEvidenceLibraryConnection"]
+				return $stateMatched
+			}
+			GetScript = 
+			{
+				return @{
+					GetScript = $GetScript
+					SetScript = $SetScript
+					TestScript = $TestScript
+					Result = false
+				}
+			} 
+		}
+		
+		Script ChangeWGReportConnectionString
+		{
+			SetScript =
+			{   
+				$path = "$($using:deployContext.ApplicationWwwFolder)\web.config"
+				[xml]$xml = Get-Content $path
+		 
+				$node = $xml.SelectSingleNode("//connectionStrings/add[@name='WGReportConnection']")
+								
+				$node.Attributes["connectionString"].Value = $using:deployContext.Settings["WGReportConnection"]
+				$xml.Save($path)
+			}
+			TestScript = 
+			{
+				$path = "$($using:deployContext.ApplicationWwwFolder)\web.config"
+				[xml]$xml = Get-Content $path
+		 
+				$node = $xml.SelectSingleNode("//connectionStrings/add[@name='WGReportConnection']")
+				$cn = $node.Attributes["connectionString"].Value
+				$stateMatched = $cn -eq  $using:deployContext.Settings["WGReportConnection"]
+				return $stateMatched
+			}
+			GetScript = 
+			{
+				return @{
+					GetScript = $GetScript
+					SetScript = $SetScript
+					TestScript = $TestScript
+					Result = false
+				}
+			} 
+		}
+		
+		Script ChangeLoggingDbConnectionString
+		{
+			SetScript =
+			{   
+				$path = "$($using:deployContext.ApplicationWwwFolder)\web.config"
+				[xml]$xml = Get-Content $path
+		 
+				$node = $xml.SelectSingleNode("//connectionStrings/add[@name='LoggingDb']")
+								
+				$node.Attributes["connectionString"].Value = $using:deployContext.Settings["LoggingDb"]
+				$xml.Save($path)
+			}
+			TestScript = 
+			{
+				$path = "$($using:deployContext.ApplicationWwwFolder)\web.config"
+				[xml]$xml = Get-Content $path
+		 
+				$node = $xml.SelectSingleNode("//connectionStrings/add[@name='LoggingDb']")
+				$cn = $node.Attributes["connectionString"].Value
+				$stateMatched = $cn -eq  $using:deployContext.Settings["LoggingDb"]
+				return $stateMatched
+		
+			}
+			GetScript = 
+			{
+				return @{
+					GetScript = $GetScript
+					SetScript = $SetScript
+					TestScript = $TestScript
+					Result = false
+				}
+			} 
+		}
+
 	}
 }
 

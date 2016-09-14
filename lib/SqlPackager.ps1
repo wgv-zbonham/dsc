@@ -6,13 +6,14 @@ $SqlPackageExe = Resolve-Path .\tools\sqlpackager\sqlpackage.exe
 
 function Deploy-WgvDatabase($servername, $databasename, $dacpac, $alwaysCreate = $true, $sqlvars = @{})
 {
+	Write-Verbose "Deploying $databasename to $servername"
     Write-Debug("Deploy-WgvDatabase($servername, $databasename, $dacpac, $alwaysCreate = $true, $sqlvars = @{})")
     
     $cmd = "$SqlPackageExe /action:publish /targetdatabasename:$databasename /targetservername:$servername /sourcefile:$dacpac /p:CreateNewDatabase=$alwaysCreate " + $(Get-WgvSqlCmdVarsFrom $sqlvars)
     
     Write-Debug($cmd)
     
-    iex $cmd
+    iex $cmd | Write-Verbose
     
 }
 
