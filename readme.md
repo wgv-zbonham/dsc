@@ -35,6 +35,7 @@ Ideally, patches are just complete, but updated, versions of the software.
 * Windows Management Framework 5.0 (PowerShell)
 ** PowerShell DSC is only a requirement because we are trying it as a basis for the tooling.  It gives us many community sourced resources that we are not required to write.
 * Some features of the deployment process (multi server) will require pushing to remote servers using WinRM.  This is a feature that is auto-configured on Windows Server 2012R2 but may need to be manually configured for remote machines on previous versions of Windows Server.
+* Should be able to bypass remote deployments by copying packages directly to target servers and executing the local, rol based, deployment
 * Running as an Administrator on the server (filesystem, database access)
     
 ## Risks    
