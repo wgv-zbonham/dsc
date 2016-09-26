@@ -1,2 +1,6 @@
 # deployment packages
 packages/
+
+
+# generated configuration roles
+DashboardConfiguration/
