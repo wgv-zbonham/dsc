@@ -1,7 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<parameters>
-  <setParameter name="IIS Web Application Name" value="Dashboard_CD" />
-  <setParameter name="LoggingDb-Web.config Connection String" value="Data Source=.;Initial Catalog=WGReport_CD;Integrated Security=True" />
-  <setParameter name="WGReportConnection-Web.config Connection String" value="Data Source=.;Initial Catalog=WGReport_CD;Integrated Security=True" />
-  <setParameter name="WGEvidenceLibraryConnection-Web.config Connection String" value="Data Source=.;Initial Catalog=WGEvidenceLibrary_CD;Integrated Security=True" />
-</parameters>

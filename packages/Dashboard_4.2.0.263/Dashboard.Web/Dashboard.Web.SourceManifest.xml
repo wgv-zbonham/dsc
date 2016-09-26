@@ -1,7 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<sitemanifest>
-  <IisApp path="C:\a2\843646f2f9341349\Dashboard.Web\obj\DevCD\Package\PackageTmp" />
-  <setAcl path="C:\a2\843646f2f9341349\Dashboard.Web\obj\DevCD\Package\PackageTmp" setAclResourceType="Directory" />
-  <setAcl path="C:\a2\843646f2f9341349\Dashboard.Web\obj\DevCD\Package\PackageTmp" setAclUser="anonymousAuthenticationUser" setAclResourceType="Directory" />
-  <setAcl path="C:\a2\843646f2f9341349\Dashboard.Web\obj\DevCD\Package\PackageTmp\App_Data" setAclResourceType="Directory" setAclAccess="Write" />
-</sitemanifest>
