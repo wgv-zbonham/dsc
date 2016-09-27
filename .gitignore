@@ -1,6 +1,11 @@
 # deployment packages
 packages/
 
+# deployment logs
+deploy*.log
 
 # generated configuration roles
 DashboardConfiguration/
+
+# any certificates we generate
+*.cer

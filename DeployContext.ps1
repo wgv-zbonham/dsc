@@ -27,6 +27,8 @@ class DeployContext {
     [string]$WGLoggingDbName = "WGReport"
 	
 	[hashtable]$Settings = @{}
+    [string]$DeploymentCertificateThumbprint = "overridden"
+
     
         
     # todo load from environment

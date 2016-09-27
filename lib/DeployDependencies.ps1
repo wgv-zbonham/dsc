@@ -18,6 +18,9 @@ Set-PSRepository -Name PSGallery -InstallationPolicy Trusted | Write-Verbose
 
 Install-ModuleIfNeeded xWebAdministration
 Install-ModuleIfNeeded xComputerManagement
+Install-ModuleIfNeeded xSqlServer
+Install-ModuleIfNeeded xSystemSecurity
+
 
 
 # Get-Credential prompts at command line

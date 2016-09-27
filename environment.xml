@@ -5,9 +5,12 @@
 		<setting name="WatchGuardFolder" value="c:\watchguardvideo"/>
 		<setting name="PackagesFolder" value="c:\watchguardvideo\packages"/>
 		
-		<setting name="WGEvidenceLibraryConnection" value="Data Source=.;Initial Catalog=WGEvidenceLibrary_ZB;Integrated Security=True"/>
-		<setting name="LoggingDb" value="Data Source=.;Initial Catalog=WGReport_ZB;Integrated Security=True"/>
-		<setting name="WGReportConnection" value="Data Source=.;Initial Catalog=WGReport_ZB;Integrated Security=True"/>
+		<setting name="WGEvidenceLibraryConnection" value="Data Source=SMOKEY;Initial Catalog=WGEvidenceLibrary;Integrated Security=True"/>
+		<setting name="WGReportConnection" value="Data Source=.;Initial Catalog=WGReport;Integrated Security=True"/>
+		
+		<setting name="ELWebPath" value="https://smokey" />
+		<setting name="DashboardPath" value="http://localhost:8000" />
+		<setting name="ReportsPath" value="http://watchguardvideo.com" />
 	</settings>
 	
 	<certificates>

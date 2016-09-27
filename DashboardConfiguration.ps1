@@ -1,15 +1,20 @@
-param($deployContext)
+param($deployContext, $credential)
 
 
 Configuration DashboardConfiguration
 {
 	param($deployContext)
 	
-	 Import-DscResource -Module PSDesiredStateConfiguration, xWebAdministration, xComputerManagement
+	 Import-DscResource -Module PSDesiredStateConfiguration, xWebAdministration, xComputerManagement, xSqlServer, xSystemSecurity
     
-	
+	Write-Verbose "Using certificate $($deployContext.DeploymentCertificateThumbprint)"
+
 	Node localhost
-	{	       
+	{
+		LocalConfigurationManager 
+        { 
+             CertificateId = $deployContext.DeploymentCertificateThumbprint 
+        } 	       
 
         File ApplicationFolder
         {
@@ -17,24 +22,16 @@ Configuration DashboardConfiguration
             Type = "Directory" 
             
 			DestinationPath = $deployContext.ApplicationFolder
-        }
-        <# 
-        File BinFolder
+        }        
+		
+		File WatchGuardWwwFolder
         {
             Ensure = "Present"  
             Type = "Directory" 
             
-			DestinationPath = $deployContext.ApplicationBinFolder            
+			DestinationPath = "{0}\apps\WatchGuardVideo\www" -f $deployContext.WatchGuardFolder            
         }
-        #>
-        File WwwFolder
-        {
-            Ensure = "Present"  
-            Type = "Directory" 
-            
-			DestinationPath = $deployContext.ApplicationWwwFolder            
-        }
-
+		
         File DashboardEtl
         {
             DestinationPath = $deployContext.ApplicationBinFolder
@@ -46,7 +43,38 @@ Configuration DashboardConfiguration
             Recurse = $true
             MatchSource = $true
         }
+
+		File DashboardWebContent
+        {
+            DestinationPath = $deployContext.ApplicationWwwFolder
+            SourcePath = "{0}\{1}\Dashboard.Web" -f $deployContext.PackageFolder, $deployContext.PackageVersion
+            Ensure = "Present"
+            Type = "Directory"
+            Checksum = "modifiedDate"
+            Force = $true
+            Recurse = $true
+            MatchSource = $true
+        }
+
+		xFileSystemAccessRule SetWatchGuardFolderAccess 
+		{
+			Path = "$($deployContext.WatchGuardFolder)"
+			Identity = "Administrators"
+			Rights = "FullControl"
+		
+		}
        
+	   xWebAppPool WatchGuardAppPool
+		{
+			Name = "WatchGuardVideo"
+			Ensure = "Present"
+			autoStart = $true
+			managedPipelineMode = "Integrated"
+			startMode = "AlwaysRunning"
+			managedRuntimeVersion = "v4.0"
+			identityType = "NetworkService"  # this identity is what we go after the database as, unless over riden in the connection string via sql auth
+		}
+		
         # todo Identity needs to be lifted to deployContext
         xWebAppPool DashboardAppPool
 		{
@@ -56,35 +84,55 @@ Configuration DashboardConfiguration
 			managedPipelineMode = "Integrated"
 			startMode = "AlwaysRunning"
 			managedRuntimeVersion = "v4.0"
-			identityType = "LocalSystem"  # this identity is what we go after the database as, unless over riden in the connection string via sql auth
+			identityType = "NetworkService"  # this identity is what we go after the database as, unless over riden in the connection string via sql auth
 		}
+		
+		
         
-        #todo bindings need to be lifted up
-        xWebsite DashboardWebsite
+		xWebsite WatchguardWebsite
         {
-            Name = $deployContext.FeatureName
-            ApplicationPool = "EL-{0}" -f $deployContext.FeatureName
+            Name = "WatchGuardVideo"
+            ApplicationPool = "WatchGuardVideo"
             EnabledProtocols = "http"
             Ensure = "Present"
-            PhysicalPath = $deployContext.ApplicationWwwFolder
+            PhysicalPath = "{0}\apps\WatchGuardVideo\www" -f $deployContext.WatchGuardFolder
             PreloadEnabled = $true
             State = "Started"
             BindingInfo  = @(   MSFT_xWebBindingInformation
                                 {
                                    Protocol              = "HTTP"
-                                   Port                  = 8000                                   
+                                   Port                  = 80                                   
                                 }
                              )
-			
-            
         }
-        
+		
+        #todo bindings need to be lifted up
+        xWebsite DashboardWebsite
+        {
+            Name = "WatchGuardVideoDashboard"
+            ApplicationPool = "EL-Dashboard"
+            EnabledProtocols = "http"
+            Ensure = "Present"
+            PhysicalPath = "{0}\apps\Dashboard\www" -f $deployContext.WatchGuardFolder
+            PreloadEnabled = $true
+            State = "Started"
+            BindingInfo  = @(   MSFT_xWebBindingInformation
+                                {
+                                   Protocol              = "HTTP"
+                                   Port                  = 5000                                   
+                                }
+                             )
+        }
+
+        <#
         Archive DashboardContent
         {
             Ensure = "Present"  
             Path = "{0}\{1}\Dashboard.Web.zip" -f $deployContext.PackageFolder, $deployContext.PackageVersion
             Destination = $deployContext.ApplicationWwwFolder
         }
+		#>
+
         
         xScheduledTask DashboardEtlTask
         {
@@ -110,12 +158,14 @@ Configuration DashboardConfiguration
 			TestScript = 
 			{						    
 				$path = "$($using:deployContext.ApplicationWwwFolder)\web.config"
+				Write-Verbose "Checking $path"
 				[xml]$xml = Get-Content $path
 		 
-				$node = $xml.SelectSingleNode("//connectionStrings/add[@name='WGEvidenceLibraryConnection']")
-				$cn = $node.Attributes["connectionString"].Value
-				$stateMatched = $cn -eq  $using:deployContext.Settings["WGEvidenceLibraryConnection"]
-				return $stateMatched
+				#$node = $xml.SelectSingleNode("//connectionStrings/add[@name='WGEvidenceLibraryConnection']")
+				#$cn = $node.Attributes["connectionString"].Value
+				#$stateMatched = $cn -eq  $using:deployContext.Settings["WGEvidenceLibraryConnection"]
+				#return $stateMatched
+				return $false
 			}
 			GetScript = 
 			{
@@ -161,16 +211,17 @@ Configuration DashboardConfiguration
 			} 
 		}
 		
-		Script ChangeLoggingDbConnectionString
+		
+		Script ModifyWebConfigDashboardPath
 		{
 			SetScript =
 			{   
 				$path = "$($using:deployContext.ApplicationWwwFolder)\web.config"
 				[xml]$xml = Get-Content $path
 		 
-				$node = $xml.SelectSingleNode("//connectionStrings/add[@name='LoggingDb']")
+				$node = $xml.SelectSingleNode("//appSettings/add[@key='DashboardPath']")
 								
-				$node.Attributes["connectionString"].Value = $using:deployContext.Settings["LoggingDb"]
+				$node.Attributes["value"].Value = $using:deployContext.Settings["DashboardPath"]
 				$xml.Save($path)
 			}
 			TestScript = 
@@ -178,9 +229,9 @@ Configuration DashboardConfiguration
 				$path = "$($using:deployContext.ApplicationWwwFolder)\web.config"
 				[xml]$xml = Get-Content $path
 		 
-				$node = $xml.SelectSingleNode("//connectionStrings/add[@name='LoggingDb']")
-				$cn = $node.Attributes["connectionString"].Value
-				$stateMatched = $cn -eq  $using:deployContext.Settings["LoggingDb"]
+				$node = $xml.SelectSingleNode("//appSettings/add[@key='DashboardPath']")
+				$cn = $node.Attributes["value"].Value
+				$stateMatched = $cn -eq  $using:deployContext.Settings["DashboardPath"]
 				return $stateMatched
 		
 			}
@@ -194,6 +245,104 @@ Configuration DashboardConfiguration
 				}
 			} 
 		}
+		
+		Script ModifyWebConfigReportsPath
+		{
+			SetScript =
+			{   
+				$path = "$($using:deployContext.ApplicationWwwFolder)\web.config"
+				[xml]$xml = Get-Content $path
+		 
+				$node = $xml.SelectSingleNode("//appSettings/add[@key='ReportsPath']")
+								
+				$node.Attributes["value"].Value = $using:deployContext.Settings["ReportsPath"]
+				$xml.Save($path)
+			}
+			TestScript = 
+			{
+				$path = "$($using:deployContext.ApplicationWwwFolder)\web.config"
+				[xml]$xml = Get-Content $path
+		 
+				$node = $xml.SelectSingleNode("//appSettings/add[@key='ReportsPath']")
+				$cn = $node.Attributes["value"].Value
+				$stateMatched = $cn -eq  $using:deployContext.Settings["ReportsPath"]
+				return $stateMatched
+		
+			}
+			GetScript = 
+			{
+				return @{
+					GetScript = $GetScript
+					SetScript = $SetScript
+					TestScript = $TestScript
+					Result = false
+				}
+			} 
+		}
+		
+
+		
+		Script ChangeEtlWGEvidenceLibraryConnectionString
+		{
+			SetScript =
+			{   
+				$path = "$($using:deployContext.ApplicationBinFolder)\Dashboard.Etl.exe.config"
+				Write-Verbose "ChangeEtlWGEvidenceLibraryConnectionString-SetScript $path"
+				[xml]$xml = Get-Content $path
+		 
+				$node = $xml.SelectSingleNode("//connectionStrings/add[@name='WGEvidenceLibraryConnection']")
+
+				if ($node -eq $null) 
+				{
+					Write-Error "Did not find connectionString named 'WGEvidenceLibraryConnection"
+					return;
+				}
+				$cs = $using:deployContext.Settings["WGEvidenceLibraryConnection"]
+
+				Write-Verbose "ChangeEtlWGEvidenceLibraryConnectionString-SetScript applying WGEvidenceLibraryConnection connectionString $cs"
+								
+				$node.Attributes["connectionString"].Value = $using:deployContext.Settings["WGEvidenceLibraryConnection"]
+				Write-Verbose "ChangeEtlWGEvidenceLibraryConnectionString-SetScript saving web.config"
+
+				$xml.Save($path)
+
+				Write-Verbose "ChangeEtlWGEvidenceLibraryConnectionString-SetScript Saved"
+			}
+			TestScript = 
+			{
+				$path = "$($using:deployContext.ApplicationBinFolder)\Dashboard.Etl.exe.config"
+				Write-Verbose "ChangeEtlWGEvidenceLibraryConnectionString $path"
+				[xml]$xml = Get-Content $path
+		 
+				$node = $xml.SelectSingleNode("//connectionStrings/add[@name='WGEvidenceLibraryConnection']")
+				$cn = $node.Attributes["connectionString"].Value
+				$stateMatched = $cn -eq  $using:deployContext.Settings["WGEvidenceLibraryConnection"]
+				return $stateMatched
+		
+			}
+			GetScript = 
+			{
+				return @{
+					GetScript = $GetScript
+					SetScript = $SetScript
+					TestScript = $TestScript
+					Result = false
+				}
+			} 
+		}
+
+<#
+		xSqlServerLogin DashboardServiceAccount
+		{
+			Ensure = "Present"
+			Name = "watchguardvideo\wgtsservice"
+			LoginType = "WindowsUser"
+			SqlServer = "."
+			SQLInstanceName = "ZACHBONHAM"
+
+
+		}
+#>		
 
 	}
 }
