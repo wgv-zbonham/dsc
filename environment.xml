@@ -19,7 +19,8 @@
 		
     
 	<servers>
-    	<server name="localhost" roles="STS|HOST|IMPORT|JOBQ|WIRELESS|WEB"/>
+    	<server name="localhost" roles="STS|HOST|IMPORT|JOBQ|WIRELESS|WEB|DASHBOARDWEB|DASHBOARDETL"/>
+		<server name="zachbonham" roles="DASHBOARD-ETL"/>
 	</servers>
 	
 	<roles>

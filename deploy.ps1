@@ -15,6 +15,8 @@ cls
 
 $deployTime = [datetime]::Now.ToString("yyyy-MM-dd-HHmmss")
 $logname = ".\deploy.{0}.log" -f $deployTime
+$nodename = $env:COMPUTERNAME
+
 Start-Transcript -path $logname -Append
 
 Write-Host "$([char]0x00A9) 2016, WatchGuard Video.  All rights reserved."
@@ -24,7 +26,7 @@ Write-Host ""
 Write-Host ""
 Write-Host ""
 Write-Host "Package deployment starting ..."
-Write-Host "Node Name: $env:computername.$env:userdnsdomain"
+Write-Host "Node Name: $nodename"
 Write-Host "Identity: $(whoami)"
 
 
@@ -71,7 +73,7 @@ function MakeCert() {
 }
 
 
-function Deploy($settings) {
+function Deploy($settings, $roles) {
 
 
 	$certificateData = MakeCert
@@ -94,16 +96,40 @@ function Deploy($settings) {
             NodeName = 'localhost'
             CertificateFile = $certificateData.CertificateFile
 			Thumbprint = $certificateData.Thumbprint
+			Roles = $roles
         }
     )
 }
 
+Write-Host "DSC configuration starting ..."
+Write-Host "Roles " $roles
+
+$dscConfigurations = dir dsc*.ps1
+
+foreach($dsc in $dscConfigurations)
+{
+
+	
+	Write-Verbose("Executing DSC " + $dsc.FullName)
+	Write-Verbose ("Base: " + $dsc.BaseName)
+	
+	$fileName = $dsc.FullName
+	$dscFolder = $dsc.BaseName
+
+	& $fileName -deployContext $dc -ConfigurationData $cd -Credential $credential | out-null
+	
+	Start-DscConfiguration -path $dscFolder -wait -force -Credential $credential 
+
+	<#
 	.\DashboardConfiguration -deployContext $dc -ConfigurationData $cd -Credential $credential | out-null
 
-	Set-DscLocalConfigurationManager .\DashboardConfiguration
+	Set-DscLocalConfigurationManager .\DashboardConfiguration 
 	
-	Write-Host "DSC configuration starting ..."
 	Start-DscConfiguration -path .\DashboardConfiguration -wait -force -Credential $credential
+	#>
+
+}
+
 	Write-Host "DSC configuration complete"
 
 
@@ -113,6 +139,24 @@ Write-Host "Loading environment settings from $environmentPath"
 [xml]$xml = Get-Content -path $environmentPath 
 
 
+$availableRoles = @()
+$discoveredRoles = @()
+$xml.environment.servers.server | where { $_.name -eq "localhost" -or $_.name -eq $nodename } | select -expandProperty Roles | %{ $availableRoles += $_.Split("|")}
+
+foreach($role in $availableRoles) 
+{
+	$configurationFile = "Dsc{0}.ps1" -f $role
+	
+	if ( (Test-Path $configurationFile) -eq $true) 
+	{		
+		$discoveredRoles += $role
+	}
+
+}
+
+Write-Host "Discovered the following roles: " $discoveredRoles
+
+
 $settings = @{}
 foreach($setting in $xml.environment.settings.setting) 
 {	
@@ -120,7 +164,7 @@ foreach($setting in $xml.environment.settings.setting)
 }
 
 
-$deployTime = Measure-Command { Deploy $settings }
+$deployTime = Measure-Command { Deploy $settings $discoveredRoles }
 
 
 Write-Host ""

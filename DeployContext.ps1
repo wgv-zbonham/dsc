@@ -3,6 +3,7 @@ write-debug "Loading DeployContext"
 
 class DeployContext {
 
+    [string]$NodeName = [System.Net.Dns]::GetHostName()
     [string]$WatchGuardFolder = "overridden"
     [string]$PackageFolder = $(Resolve-Path .\packages | Select -expandproperty Path)
     
