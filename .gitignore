@@ -9,3 +9,5 @@ DashboardConfiguration/
 
 # any certificates we generate
 *.cer
+
+Dsc*/

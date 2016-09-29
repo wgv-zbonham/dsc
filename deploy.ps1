@@ -1,5 +1,5 @@
 
-param($environmentPath="environment.xml")
+param($environmentPath="environment.xml", [switch]$publishDb)
 
 <#
 Requirements
@@ -75,21 +75,23 @@ function MakeCert() {
 
 function Deploy($settings, $roles) {
 
-
 	$certificateData = MakeCert
 
 	. .\DeployContext.ps1
 
 	$dc = new-object DeployContext $settings
+
+	if ( $publishDb ) 
+	{
+		Write-Host "Deploying database projects"
+		Publish-WgvAllDatabases -deployContext $dc
+	}	 
 		
 	
 	#$credential = Get-Credential -Username $Env:Userdomain\$Env:Username -m "The credential that will be used to administer WatchGuard Video applications" 
 	$dc.DeployCredential = $credential
 	$dc.DeploymentCertificateThumbprint = $certificateData.Thumbprint
 	
-
-	Write-Host "Deploying database projects"
-
 	$cd = @{
     AllNodes = @(
         @{
@@ -136,7 +138,7 @@ foreach($dsc in $dscConfigurations)
 }
 
 Write-Host "Loading environment settings from $environmentPath"
-[xml]$xml = Get-Content -path $environmentPath 
+[xml]$xml = Get-Content -path $environmentPath
 
 
 $availableRoles = @()

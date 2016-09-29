@@ -4,7 +4,7 @@
 
 $SqlPackageExe = Resolve-Path .\tools\sqlpackager\sqlpackage.exe
 
-function Deploy-WgvDatabase($servername, $databasename, $dacpac, $alwaysCreate = $true, $sqlvars = @{})
+function Publish-WgvDatabase($servername, $databasename, $dacpac, $alwaysCreate = $true, $sqlvars = @{})
 {
 	Write-Verbose "Deploying $databasename to $servername"
     Write-Debug("Deploy-WgvDatabase($servername, $databasename, $dacpac, $alwaysCreate = $true, $sqlvars = @{})")
@@ -17,7 +17,7 @@ function Deploy-WgvDatabase($servername, $databasename, $dacpac, $alwaysCreate =
     
 }
 
-function Deploy-WgvAllDatabases([DeployContext]$deployContext) {
+function Publish-WgvAllDatabases([DeployContext]$deployContext) {
 
    Write-Debug("Deploy-WgvAllDatabases")
 
@@ -35,7 +35,7 @@ function Deploy-WgvAllDatabases([DeployContext]$deployContext) {
             $actualDbName = $deployContext.DbConnections[$dbName]
         }
         
-        Deploy-WgvDatabase -servername localhost -databasename $actualDbName -dacpac  $dacpac.FullName -sqlvars $deployContext.SqlVars      
+        Publish-WgvDatabase -servername localhost -databasename $actualDbName -dacpac  $dacpac.FullName -sqlvars $deployContext.SqlVars      
     }
 }
 

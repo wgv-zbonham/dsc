@@ -43,7 +43,7 @@ class DeployContext {
         $this.ApplicationWwwFolder = "{0}\www" -f $this.ApplicationFolder
         $this.PackageVersion = "{0}_{1}" -f $this.FeatureName, $this.FeatureVersion
 		
-		Write-Host $this.ApplicationWwwFolder
+		#Write-Host $this.ApplicationWwwFolder
 		
     }
 
