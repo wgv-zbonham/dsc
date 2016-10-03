@@ -83,8 +83,9 @@ function Deploy($settings, $roles) {
 
 	if ( $publishDb ) 
 	{
-		Write-Host "Deploying database projects"
+		Write-Host "Publishing database projects"
 		Publish-WgvAllDatabases -deployContext $dc
+		Write-Host "Publishing database projects complete"
 	}	 
 		
 	
@@ -111,24 +112,18 @@ $dscConfigurations = dir dsc*.ps1
 foreach($dsc in $dscConfigurations)
 {
 
-	
+	Write-Host "Applying role DSC" $dsc.BaseName
 	Write-Verbose("Executing DSC " + $dsc.FullName)
-	Write-Verbose ("Base: " + $dsc.BaseName)
 	
+
 	$fileName = $dsc.FullName
 	$dscFolder = $dsc.BaseName
 
+	
+
 	& $fileName -deployContext $dc -ConfigurationData $cd -Credential $credential | out-null
 	
-	Start-DscConfiguration -path $dscFolder -wait -force -Credential $credential 
-
-	<#
-	.\DashboardConfiguration -deployContext $dc -ConfigurationData $cd -Credential $credential | out-null
-
-	Set-DscLocalConfigurationManager .\DashboardConfiguration 
-	
-	Start-DscConfiguration -path .\DashboardConfiguration -wait -force -Credential $credential
-	#>
+	Start-DscConfiguration -path $dscFolder -wait -force -Credential $credential
 
 }
 
